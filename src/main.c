@@ -1,70 +1,73 @@
-// You know you should actually use a buffer to read the phrases and output everything if the buffer is full and keep reading and outputing until newline
+// Coracoralinda version a-01
+// Written by Henry Peaurt
 
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
-FILE *tocount;
-FILE *toread;
+static char* errstr;
 
-int count_lines(void);
-void go_to_phrase(int lines);
-char *get_phrase(void);
-
-int main(void)
+static int
+rand_range(int n)
 {
-	tocount = fopen("/usr/share/coracoralinda/phrases.txt", "r") ;
-	toread = fopen("/usr/share/coracoralinda/phrases.txt", "r");
+	int x = rand();
 
-	int lines = count_lines();
-	srand(time(0));
-	go_to_phrase(rand() % lines - 1);
-	char *phrase = get_phrase();
-	printf("%s\n", phrase);
-
-	return 0;
-}
-
-
-int count_lines(void)
-{
-	int lines = 0;
-	char c;
-
-	while ((c = fgetc(tocount)) != EOF) {
-		if (c == '\n')
-			++lines;
+	while (x >= RAND_MAX - RAND_MAX % n) {
+		x = rand();
 	}
-	return lines;
+
+	return x;
 }
 
-
-void go_to_phrase(int lines)
+static int
+pick_fortune(char fortune[], FILE* file)
 {
-	char c;
+	char buffer[8192];
+	unsigned long count = 0;
 
-	for (int i = 0; i < lines;) {
-		c = fgetc(toread);
-		if (c == '\n')
-			++i;
+	while (fgets(buffer, sizeof buffer, file) != NULL) {
+		count++;
+
+		if (count == 0) {
+			errstr = "coracoralinda: int overflow: too many fortunes.";
+			return -1;
+		}
+
+		if (rand_range(count) % count == 0) {
+			strncpy(fortune, buffer, 8192);
+		}
+	}
+
+	if (count > 1) {
+		return 0;
+	} else {
+		errstr = "coracoralinda: empty file: no fortunes to read from.";
+		return -1;
 	}
 }
 
-
-char *get_phrase(void)
+int
+main(void)
 {
-	char c;
-	char *phrase = malloc(100);
-	int capacity = 100;
-	int used = 0;
+	char fortune[8192];
+	FILE* file = fopen(FORTUNE_PATH, "r");
 
-	while ((c = fgetc(toread)) != '\n') {
-		phrase[used++] = c;
-		if (used == capacity - 1)
-			phrase = realloc(phrase, capacity += 100);
+	if (file == NULL) {
+		errstr = "coracoralinda: file error: couldn't open file.";
+		goto error;
 	}
-	phrase[used] = '\0';
-	return phrase;
+
+	srand(time(NULL));
+
+	if (pick_fortune(fortune, file)) {
+		goto error;
+	} else {
+		fputs(fortune, stdout);
+		return 0;
+	}
+
+error:
+	fputs(errstr, stderr);
+	return 1;
 }
