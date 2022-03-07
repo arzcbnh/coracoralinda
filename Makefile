@@ -2,6 +2,7 @@ CC = gcc
 CC_ARGS = -std=c99 -pedantic -W -Wall -Werror
 
 ifdef DESTDIR
+MKDIR != mkdir -p $(DESTDIR)
 INSTALLDIR != cd $(DESTDIR); pwd
 endif
 
