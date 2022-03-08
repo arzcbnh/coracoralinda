@@ -1,4 +1,4 @@
-// Coracoralinda version a-01
+// Coracoralinda version a-02
 // Written by Henry Peaurt
 
 #include <stdio.h>
@@ -6,7 +6,19 @@
 #include <string.h>
 #include <time.h>
 
-static char* errstr;
+#define BUF 8192
+
+typedef enum {
+	NONE,
+	INTEGER_OVERFLOW,
+	EMPTY_FILE,
+	NO_FILE
+} err_t;
+
+typedef struct {
+	char fortune[BUF];
+	FILE* file;
+} cntxt;
 
 static int
 rand_range(int n)
@@ -20,54 +32,66 @@ rand_range(int n)
 	return x;
 }
 
-static int
+static err_t
 pick_fortune(char fortune[], FILE* file)
 {
-	char buffer[8192];
+	char buffer[BUF];
 	unsigned long count = 0;
+	err_t err = NONE;
 
 	while (fgets(buffer, sizeof buffer, file) != NULL) {
 		count++;
 
 		if (count == 0) {
-			errstr = "coracoralinda: int overflow: too many fortunes.";
-			return -1;
+			return INTEGER_OVERFLOW;
 		}
 
 		if (rand_range(count) % count == 0) {
-			strncpy(fortune, buffer, 8192);
+			strncpy(fortune, buffer, BUF);
 		}
 	}
 
 	if (count > 1) {
-		return 0;
-	} else {
-		errstr = "coracoralinda: empty file: no fortunes to read from.";
-		return -1;
+		return NONE;
 	}
+
+	return EMPTY_file;
+}
+
+static err_t
+run(cntxt* c)
+{
+	if (c->file = NULL) {
+		return NO_FILE;
+	}
+
+	srand(time(NULL));
+	return pick_fortune(c->fortune, c->file);
 }
 
 int
 main(void)
 {
-	char fortune[8192];
-	FILE* file = fopen(FORTUNE_PATH, "r");
+	cntxt c;
+	c.file = fopen(FORTUNE_PATH, "r");
 
-	if (file == NULL) {
-		errstr = "coracoralinda: file error: couldn't open file.";
-		goto error;
-	}
+	err_t err = run(&c);
 
-	srand(time(NULL));
+end:
+	fclose(file);
 
-	if (pick_fortune(fortune, file)) {
-		goto error;
-	} else {
+	switch (err) {
+	case NONE:
 		fputs(fortune, stdout);
 		return 0;
+	case INTEGER_OVERFLOW:
+		fputs("coracoralinda: integer overflow: too many fortunes\n", stderr);
+		return 1;
+	case EMPTY_FILE:
+		fputs("coracoralinda: empty file: no fortunes to be read\n", stderr);
+		return 1;
+	case NO_FILE:
+		fputs("coracoralinda: couldn't open fortune file\n", stderr);
+		return 1;
 	}
-
-error:
-	fputs(errstr, stderr);
-	return 1;
 }
