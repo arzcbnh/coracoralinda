@@ -37,7 +37,6 @@ pick_fortune(char fortune[], FILE* file)
 {
 	char buffer[BUF];
 	unsigned long count = 0;
-	err_t err = NONE;
 
 	while (fgets(buffer, sizeof buffer, file) != NULL) {
 		count++;
@@ -55,13 +54,13 @@ pick_fortune(char fortune[], FILE* file)
 		return NONE;
 	}
 
-	return EMPTY_file;
+	return EMPTY_FILE;
 }
 
 static err_t
 run(cntxt* c)
 {
-	if (c->file = NULL) {
+	if (c->file == NULL) {
 		return NO_FILE;
 	}
 
@@ -76,13 +75,14 @@ main(void)
 	c.file = fopen(FORTUNE_PATH, "r");
 
 	err_t err = run(&c);
+	goto end;
 
 end:
-	fclose(file);
+	fclose(c.file);
 
 	switch (err) {
 	case NONE:
-		fputs(fortune, stdout);
+		fputs(c.fortune, stdout);
 		return 0;
 	case INTEGER_OVERFLOW:
 		fputs("coracoralinda: integer overflow: too many fortunes\n", stderr);
