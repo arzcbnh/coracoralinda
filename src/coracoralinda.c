@@ -1,4 +1,4 @@
-// Coracoralinda version a-02
+// Coracoralinda v0.2.1-alpha
 // Written by Henry Peaurt
 
 #include <stdio.h>
