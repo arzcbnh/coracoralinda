@@ -1,5 +1,6 @@
 CC = gcc
 CC_ARGS = -std=c99 -pedantic -W -Wall -Werror -c
+BUILD != mkdir -p build
 
 ifdef DESTDIR
 INSTALLDIR != mkdir -p $(DESTDIR); cd $(DESTDIR); pwd
@@ -13,11 +14,14 @@ install: all fortunes/*/*
 	@mkdir -p $(INSTALLDIR)/usr/bin
 	@mkdir -p $(INSTALLDIR)/usr/share/coracoralinda
 	@cp build/coracoralinda $(INSTALLDIR)/usr/bin
-	@cp -r fortunes/* $(INSTALLDIR)/usr/share/coracoralinda
+	@cp -rf fortunes/* $(INSTALLDIR)/usr/share/coracoralinda
 
 remove:
 	@rm -rf $(INSTALLDIR)/usr/bin/coracoralinda
 	@rm -rf $(INSTALLDIR)/usr/share/coracoralinda
+
+clean:
+	@rm -rf build/*
 
 build/coracoralinda: build/coracoralinda.o
 	@$(CC) build/coracoralinda.o -o build/coracoralinda
