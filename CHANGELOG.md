@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.1-alpha
+
+09/04/2022
+
+Suffixed CHANGELOG and README with md.
+
 ## v0.3.0-alpha
 
 09/04/2022
