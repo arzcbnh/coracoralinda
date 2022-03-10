@@ -1,6 +1,3 @@
-// Coracoralinda v0.3.0-alpha
-// Written by Henry Peaurt
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
