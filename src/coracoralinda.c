@@ -1,6 +1,3 @@
-// Coracoralinda v0.3.0-alpha
-// Written by Henry Peaurt
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,32 +7,26 @@
 #define BUF 8192
 
 typedef enum {
-	NONE,
+	OK,
 	INTEGER_OVERFLOW,
 	EMPTY_FILE,
 	NO_FILE,
 	FLAG_ERR
 } err_t;
 
-typedef struct {
-	char fortune[BUF];
-	FILE* file;
-} ctx;
+char fortune[BUF];
+FILE* src;
 
-static err_t pick_fortune(ctx* c);
+static err_t pick_fortune(void);
 static int rand_range(int n);
-static err_t add_fortune(void);
 
 int
 main(int argc, char* argv[])
 {
-	int flag;
-	err_t err = NONE;
-	ctx c = {
-		.file = fopen(FORTUNE_PATH, "r")
-	};
+	src = fopen(FORTUNE_PATH, "r");
+	err_t err = OK;
 
-	if (c.file == NULL) {
+	if (src == NULL) {
 		err = NO_FILE;
 		goto end;
 	}
@@ -43,15 +34,14 @@ main(int argc, char* argv[])
 	srand(time(NULL));
 
 	if (argc == 1) {
-		err = pick_fortune(&c);
+		err = pick_fortune();
 	} else {
-		while ((flag = getopt(argc, argv, "a:p")) != -1 && err == NONE) {
+		char flag;
+
+		while ((flag = getopt(argc, argv, "p")) != -1 && err == OK) {
 			switch (flag) {
-			case 'a':
-				err = add_fortune();
-				break;
 			case 'p':
-				err = pick_fortune(&c);
+				err = pick_fortune();
 				break;
 			case ':':
 			case '?':
@@ -62,11 +52,11 @@ main(int argc, char* argv[])
 	}
 
 end:
-	fclose(c.file);
+	fclose(src);
 
 	switch (err) {
-	case NONE:
-		fputs(c.fortune, stdout);
+	case OK:
+		fputs(fortune, stdout);
 		return 0;
 	case INTEGER_OVERFLOW:
 		fputs("coracoralinda: integer overflow: too many fortunes\n", stderr);
@@ -79,33 +69,29 @@ end:
 		return 1;
 	case FLAG_ERR:
 		return 1;
-
 	}
 }
 
 static err_t
-pick_fortune(ctx* c)
+pick_fortune(void)
 {
 	char buffer[BUF];
 	unsigned long count = 0;
 
-	while (fgets(buffer, sizeof buffer, c->file) != NULL) {
+	while (fgets(buffer, sizeof buffer, src) != NULL) {
 		count++;
 
-		if (count == 0) {
+		if (count == 0)
 			return INTEGER_OVERFLOW;
-		}
 
-		if (rand_range(count) % count == 0) {
-			strncpy(c->fortune, buffer, BUF);
-		}
+		if (rand_range(count) % count == 0)
+			strncpy(fortune, buffer, BUF);
 	}
 
-	if (count == 0) {
+	if (count == 0)
 		return EMPTY_FILE;
-	}
 
-	return NONE;
+	return OK;
 }
 
 static int
@@ -113,25 +99,8 @@ rand_range(int n)
 {
 	int x = rand();
 
-	while (x >= RAND_MAX - RAND_MAX % n) {
+	while (x >= RAND_MAX - RAND_MAX % n)
 		x = rand();
-	}
 
 	return x;
-}
-
-static err_t
-add_fortune(void)
-{
-	FILE* file = fopen(FORTUNE_PATH, "a");
-
-	if (file == NULL) {
-		return NO_FILE;
-	}
-
-	fprintf(file, "%s\n", optarg);
-
-	fclose(file);
-
-	return NONE;
 }
